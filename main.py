@@ -1,5 +1,6 @@
-import pygame
-import random
+import pygame,random
+
+RECT_THICKNESS=4
 
 # creating the data structure for pieces
 # setting up global vars
@@ -148,26 +149,25 @@ class Piece(object):
         self.rotation = 0
 
 
-def create_grid(locked_positions={}): # possible of locked_positions need to change to locked_pos
+# possible of locked_positions need to change to locked_pos
+def create_grid(locked_positions={}):
     grid = [[(0, 0, 0) for _ in range(10)] for _ in range(20)]
     for i in range(len(grid)):
-        for j in range(len(grid(i))):
-            if (j, i) in locked_positions:
-                # possible swap of i and j in [()]
+        for j in range(len(grid[i])):
+            if (j, i) in locked_positions:  # possible swap of i and j in [()]
                 c = locked_positions[(i, j)]
                 grid[i][j] = c
     return grid
 
 
 def draw_grid(surface, grid):
+    sx=top_left_x
+    sy=top_left_y
 
-    for i in range(len(grid)):
-        for j in range(len(grid[i])):
-            pygame.draw.rect(surface, grid[i][j], (top_left_x+j*block_size,
-                             top_left_y+i*block_size, block_size, block_size), 0)
-
-    pygame.draw.rect(surface, (255, 0, 0), (top_left_x,
-                     top_left_y, play_width, play_height), 4)
+    for i in range(1,len(grid)): #possibility: change range start from 1 to 0
+        pygame.draw.line(surface,(177,177,177),(sx+RECT_THICKNESS,sy+i*block_size),(sx+play_width-RECT_THICKNESS*2,sy+i*block_size)) #possibility: remove RECT_THICKNESS
+        for j in range(1,len(grid[i])): #possibility: change range start from 1 to 0
+            pygame.draw.line(surface,(177,177,177),(sx+j*block_size,sy+RECT_THICKNESS),(sx+j*block_size,sy+play_height-RECT_THICKNESS*2)) #possibility: remove RECT_THICKNESS
 
 
 def convert_shape_format(shape):
@@ -183,7 +183,7 @@ def check_lost(positions):
 
 
 def get_shape():
-    return Piece(5,0,random.choice(shapes))
+    return Piece(5, 0, random.choice(shapes))
 
 
 def draw_text_middle(text, size, color, surface):
@@ -198,57 +198,67 @@ def draw_next_shape(shape, surface):
     pass
 
 
-def draw_window(surface,grid):
+def draw_window(surface, grid):
     surface.fill((0, 0, 0))
 
     pygame.font.init()
     font = pygame.font.SysFont('comicsans', 64)
     label = font.render("Tetris", 1, (255, 255, 255))
     surface.blit(label, (top_left_x + play_width /
-                 2 - (label.get_width()/2), 30))
+                 2 - (label.get_width()/2), 0))
 
-    draw_grid(surface,grid)
+    for i in range(len(grid)):
+        for j in range(len(grid[i])):
+            pygame.draw.rect(surface, grid[i][j], (top_left_x+j*block_size,
+                             top_left_y+i*block_size, block_size, block_size), 0)  # possiblity: change 0 to 1
+
+    pygame.draw.rect(surface, (255, 0, 0), (top_left_x,
+                     top_left_y, play_width, play_height), RECT_THICKNESS)
+
+    draw_grid(surface, grid)
     pygame.display.update()
 
 
 def main(surface):   # possiblity: surface could be removed
     locked_positions = {}
-    grid=create_grid(locked_positions)
+    grid = create_grid(locked_positions)
 
-    change_piece=False
-    run=True
-    current_piece=get_shape()
+    change_piece = False
+    run = True
+    current_piece = get_shape()
     next_piece = get_shape()
-    clock=pygame.time.Clock()
-    fall_time=0
+    clock = pygame.time.Clock()
+    fall_time = 0
 
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run=False
+                run = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     current_piece.x -= 1
-                    if not valid_space(current_piece,grid):
+                    if not valid_space(current_piece, grid):
                         current_piece.x += 1
                 if event.key == pygame.K_RIGHT:
                     current_piece.x += 1
-                    if not valid_space(current_piece,grid):
+                    if not valid_space(current_piece, grid):
                         current_piece.x -= 1
                 if event.key == pygame.K_DOWN:
-                    current_piece.y += 1                    
-                    if not valid_space(current_piece,grid):
+                    current_piece.y += 1
+                    if not valid_space(current_piece, grid):
                         current_piece.y -= 1
                 if event.key == pygame.K_UP:
-                    current_piece.rotation +=1
-                    if not valid_space(current_piece,grid):
+                    current_piece.rotation += 1
+                    if not valid_space(current_piece, grid):
                         current_piece.rotation -= 1
 
-        draw_window(surface,grid)
+        draw_window(surface, grid)
+
 
 def main_menu(win):
     main(win)
 
-win=pygame.display.set_mode((s_width,s_height))
+
+win = pygame.display.set_mode((s_width, s_height))
 pygame.display.set_caption("Tetris | Nika Jobava")
-main_menu()
+main_menu(win)
