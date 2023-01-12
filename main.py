@@ -1,6 +1,7 @@
-import pygame,random
+import pygame
+import random
 
-RECT_THICKNESS=4
+RECT_THICKNESS = 4
 
 # creating the data structure for pieces
 # setting up global vars
@@ -161,46 +162,49 @@ def create_grid(locked_positions={}):
 
 
 def draw_grid(surface, grid):
-    sx=top_left_x
-    sy=top_left_y
+    sx = top_left_x
+    sy = top_left_y
 
-    for i in range(1,len(grid)): #possibility: change range start from 1 to 0
-        pygame.draw.line(surface,(177,177,177),(sx+RECT_THICKNESS,sy+i*block_size),(sx+play_width-RECT_THICKNESS*2,sy+i*block_size)) #possibility: remove RECT_THICKNESS
-        for j in range(1,len(grid[i])): #possibility: change range start from 1 to 0
-            pygame.draw.line(surface,(177,177,177),(sx+j*block_size,sy+RECT_THICKNESS),(sx+j*block_size,sy+play_height-RECT_THICKNESS*2)) #possibility: remove RECT_THICKNESS
+    for i in range(1, len(grid)):  # possibility: change range start from 1 to 0
+        pygame.draw.line(surface, (177, 177, 177), (sx+RECT_THICKNESS, sy+i*block_size),
+                         (sx+play_width-RECT_THICKNESS*2, sy+i*block_size))  # possibility: remove RECT_THICKNESS
+        # possibility: change range start from 1 to 0
+        for j in range(1, len(grid[i])):
+            pygame.draw.line(surface, (177, 177, 177), (sx+j*block_size, sy+RECT_THICKNESS),
+                             (sx+j*block_size, sy+play_height-RECT_THICKNESS*2))  # possibility: remove RECT_THICKNESS
 
 
 def convert_shape_format(shape):
-    positions=[]
-    format=shape.shape[shape.rotation % len(shape.shape)]
+    positions = []
+    format = shape.shape[shape.rotation % len(shape.shape)]
 
-    for i,line in enumerate(format):
-        row=list(line)
-        for j,column in enumerate(row):
-            if column=="0":
-                positions.append((shape.x+j,shape.y+i))
+    for i, line in enumerate(format):
+        row = list(line)
+        for j, column in enumerate(row):
+            if column == "0":
+                positions.append((shape.x+j, shape.y+i))
 
-    for i,pos in enumerate(positions):
-        positions[i]=(pos[0]-2,pos[i]-4)
-        
+    for i, pos in enumerate(positions):
+        positions[i] = (pos[0]-2, pos[i]-4)
 
 
 def valid_space(shape, grid):
-    accepted_pos=[[(j,i) for j in range(10)  if grid [i][j]==(0,0,0)] for i in range(20)]
-    accepted_pos=[j for sub in accepted_pos for j in sub]
+    accepted_pos = [[(j, i) for j in range(10) if grid[i]
+                     [j] == (0, 0, 0)] for i in range(20)]
+    accepted_pos = [j for sub in accepted_pos for j in sub]
 
     formatted = convert_shape_format(shape)
     for pos in formatted:
         if pos not in accepted_pos:
-            if pos[1]>-1:
+            if pos[1] > -1:
                 return False
     return True
 
 
 def check_lost(positions):
     for pos in positions:
-        x,y=pos
-        if y<1:
+        x, y = pos
+        if y < 1:
             return True
     return False
 
@@ -252,8 +256,19 @@ def main(surface):   # possiblity: surface could be removed
     next_piece = get_shape()
     clock = pygame.time.Clock()
     fall_time = 0
+    fall_speed = 0.27
 
     while run:
+        grid = create_grid(locked_positions)
+        fall_time += clock.get_rawtime()
+        clock.tick()
+
+        if fall_time/1000 > fall_speed:
+            fall_time = 0
+            current_piece.y += 1
+            if not valid_space(current_piece, grid) and current_piece.y > 0:
+                current_piece.y -= 1
+                change_piece = True
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -275,11 +290,30 @@ def main(surface):   # possiblity: surface could be removed
                     if not valid_space(current_piece, grid):
                         current_piece.rotation -= 1
 
+        shape_pos = convert_shape_format(current_piece)
+
+        for i in range(len(shape_pos)):
+            x, y = shape_pos[i]
+            if y > -1:
+                grid[y][x] = current_piece.color
+
+        if change_piece:
+            for pos in shape_pos:
+                p = (pos[0], pos[1])
+                locked_positions[p] = current_piece.color
+            current_piece = next_piece
+            next_piece = get_shape()
+            change_piece = False
+
         draw_window(surface, grid)
+        if check_lost(locked_positions):
+            run = False
+    pygame.display.quit()
 
 
 def main_menu(win):
     main(win)
+
 
 win = pygame.display.set_mode((s_width, s_height))
 pygame.display.set_caption("Tetris | Nika Jobava")
