@@ -150,12 +150,11 @@ class Piece(object):
         self.rotation = 0
 
 
-# possible of locked_positions need to change to locked_pos
 def create_grid(locked_positions={}):
     grid = [[(0, 0, 0) for _ in range(10)] for _ in range(20)]
     for i in range(len(grid)):
         for j in range(len(grid[i])):
-            if (j, i) in locked_positions:  # possible swap of i and j in [()]
+            if (i,j) in locked_positions:
                 c = locked_positions[(i, j)]
                 grid[i][j] = c
     return grid
@@ -165,13 +164,13 @@ def draw_grid(surface, grid):
     sx = top_left_x
     sy = top_left_y
 
-    for i in range(1, len(grid)):  # possibility: change range start from 1 to 0
+    for i in range(0, len(grid)):
         pygame.draw.line(surface, (177, 177, 177), (sx+RECT_THICKNESS, sy+i*block_size),
-                         (sx+play_width-RECT_THICKNESS*2, sy+i*block_size))  # possibility: remove RECT_THICKNESS
-        # possibility: change range start from 1 to 0
-        for j in range(1, len(grid[i])):
+                         (sx+play_width-RECT_THICKNESS*2, sy+i*block_size))
+
+        for j in range(0, len(grid[i])):
             pygame.draw.line(surface, (177, 177, 177), (sx+j*block_size, sy+RECT_THICKNESS),
-                             (sx+j*block_size, sy+play_height-RECT_THICKNESS*2))  # possibility: remove RECT_THICKNESS
+                             (sx+j*block_size, sy+play_height-RECT_THICKNESS*2))
 
 
 def convert_shape_format(shape):
@@ -185,7 +184,9 @@ def convert_shape_format(shape):
                 positions.append((shape.x+j, shape.y+i))
 
     for i, pos in enumerate(positions):
-        positions[i] = (pos[0]-2, pos[i]-4)
+        positions[i] = (pos[0]-2, pos[1]-4)
+
+    return positions
 
 
 def valid_space(shape, grid):
@@ -204,6 +205,7 @@ def valid_space(shape, grid):
 def check_lost(positions):
     for pos in positions:
         x, y = pos
+        print(positions)
         if y < 1:
             return True
     return False
@@ -237,7 +239,8 @@ def draw_window(surface, grid):
     for i in range(len(grid)):
         for j in range(len(grid[i])):
             pygame.draw.rect(surface, grid[i][j], (top_left_x+j*block_size,
-                             top_left_y+i*block_size, block_size, block_size), 0)  # possiblity: change 0 to 1
+                             top_left_y+i*block_size, block_size, block_size), 0)
+
 
     pygame.draw.rect(surface, (255, 0, 0), (top_left_x,
                      top_left_y, play_width, play_height), RECT_THICKNESS)
@@ -246,7 +249,7 @@ def draw_window(surface, grid):
     pygame.display.update()
 
 
-def main(surface):   # possiblity: surface could be removed
+def main(surface):
     locked_positions = {}
     grid = create_grid(locked_positions)
 
